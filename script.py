@@ -115,10 +115,13 @@ dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
 ac.move_to('css:#fromStationText').click().type(change(f'{fromCity}'))
+if change(f'{fromCity}') == 'longhui':
+    dp.ele('css:#toStationText').input(Keys.DOWN)
 dp.ele('css:#fromStationText').input(Keys.ENTER)
 # 终点站
 ac.move_to('css:#toStationText').click().type(change(f'{toCity}'))
-dp.ele('css:#toStationText').input(Keys.DOWN)
+if change(f'{fromCity}') == 'longhui':
+    dp.ele('css:#toStationText').input(Keys.DOWN)
 dp.ele('css:#toStationText').input(Keys.ENTER)
 # 出发时间
 dp.ele('css:#train_date').clear()
