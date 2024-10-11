@@ -16,7 +16,7 @@ def change(chinese):
 # 引用配置文件
 with open('config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
-f = open('citys.json', encoding='utf-8').read()
+f = open('cities.json', encoding='utf-8').read()
 city_data = json.loads(f)
 
 headers = {
