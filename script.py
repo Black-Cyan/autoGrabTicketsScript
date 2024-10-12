@@ -2,6 +2,7 @@ import time
 import json
 import yaml
 import requests
+import revise
 from prettytable import PrettyTable
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Actions
@@ -101,7 +102,11 @@ for i in result:
         soft_sleeper,
     ])
     page += 1
-print(tb)
+if result:
+    print(tb)
+else:
+    print('暂无该方案车次，程序自动退出')
+    exit()
 
 username = config['username']
 password = config['password']
@@ -115,13 +120,11 @@ dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
 ac.move_to('css:#fromStationText').click().type(change(f'{fromCity}'))
-if change(f'{fromCity}') == 'longhui':
-    dp.ele('css:#toStationText').input(Keys.DOWN)
+revise.need_revise(change(f'{fromCity}'))
 dp.ele('css:#fromStationText').input(Keys.ENTER)
 # 终点站
 ac.move_to('css:#toStationText').click().type(change(f'{toCity}'))
-if change(f'{fromCity}') == 'longhui':
-    dp.ele('css:#toStationText').input(Keys.DOWN)
+revise.need_revise(change(f'{toCity}'))
 dp.ele('css:#toStationText').input(Keys.ENTER)
 # 出发时间
 dp.ele('css:#train_date').clear()
