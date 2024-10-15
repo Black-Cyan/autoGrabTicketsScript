@@ -9,6 +9,9 @@ from DrissionPage.common import Actions
 from DrissionPage.common import Keys
 from pypinyin import pinyin, Style
 
+print('--------脚本作者：墨青--------')
+print('Github仓库：https://github.com/BlackCyan07/autoGrabTicketsScript')
+
 def change(chinese):
     text1 = pinyin(chinese, style=Style.NORMAL)
     string = ''.join([t[0] for t in text1])
