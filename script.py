@@ -117,21 +117,21 @@ id_card = config['id_card']
 Num = input('请选择你想购买的车次序号：')
 
 # 打开浏览器
-dp = ChromiumPage()
+dp = ChromiumPage(9333)
 ac = Actions(dp)
 dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
-ac.move_to('css:#fromStationText').click().type(change(f'{fromCity}'))
-revise.need_revise(change(f'{fromCity}'))
+ac.move_to('css:#fromStationText').click().type(change(fromCity))
+revise.need_revise(change(fromCity))
 dp.ele('css:#fromStationText').input(Keys.ENTER)
 # 终点站
-ac.move_to('css:#toStationText').click().type(change(f'{toCity}'))
-revise.need_revise(change(f'{toCity}'))
+ac.move_to('css:#toStationText').click().type(change(toCity))
+revise.need_revise(change(toCity))
 dp.ele('css:#toStationText').input(Keys.ENTER)
 # 出发时间
 dp.ele('css:#train_date').clear()
-dp.ele('css:#train_date').input(f'{train_date}')
+dp.ele('css:#train_date').input(train_date)
 # 点击查询按钮
 dp.ele('css:#query_ticket').click()
 # 点击预定按钮
@@ -140,17 +140,27 @@ dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
 text = dp.ele('css:#login_user').text
 if text == '登录':
     # 输入账号密码登录
-    dp.ele('css:#J-userName').input(f'{username}')
-    dp.ele('css:#J-password').input(f'{password}')
+    dp.ele('css:#J-userName').input(username)
+    dp.ele('css:#J-password').input(password)
     dp.ele('css:#J-login').click()
-    dp.ele('css:#id_card').input(f'{id_card}')
+    dp.ele('css:#id_card').input(id_card)
     dp.ele('css:#verification_code').click()
     code = input('请输入手机收到的验证码：')
-    dp.ele('css:#code').input(f'{code}')
+    dp.ele('css:#code').input(code)
     dp.ele('css:#sureClick').click()
+    while dp.ele('xpath://*[@id="message"]/p').text == '验证码校验失败!':
+        code = input('验证码输入错误！请重新输入验证码：')
+        dp.ele('css:#code').clear().input(code)
+        dp.ele('css:#sureClick').click()
     time.sleep(0.5)
 # 选择乘车人
 dp.ele('css:#normalPassenger_0').click()
+if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
+    stu = input('检测到乘客为学生，是否购买学生票？（y/n）:')
+    if stu == 'y':
+        dp.ele('css:#dialog_xsertcj_ok').click()
+    else:
+        dp.ele('css:#dialog_xsertcj_cancel').click()
 # 提交订单
 dp.ele('css:#submitOrder_id').click()
 time.sleep(0.5)
