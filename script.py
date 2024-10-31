@@ -120,6 +120,25 @@ Num = input('请选择你想购买的车次序号：')
 dp = ChromiumPage(9333)
 ac = Actions(dp)
 dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
+"""判断是否有登录账号"""
+text = dp.ele('css:#login_user').text
+if text == '登录':
+    # 输入账号密码登录
+    dp.ele('css:#login_user').click()
+    dp.ele('css:#J-userName').input(username)
+    dp.ele('css:#J-password').input(password)
+    dp.ele('css:#J-login').click()
+    dp.ele('css:#id_card').input(id_card)
+    dp.ele('css:#verification_code').click()
+    code = input('请输入手机收到的验证码：')
+    dp.ele('css:#code').input(code)
+    dp.ele('css:#sureClick').click()
+    while dp.ele('xpath://*[@id="message"]/p').text == '验证码校验失败!' or '很抱歉，您输入的短信验证码有误。':
+        code = input('验证码输入错误！请重新输入验证码：')
+        dp.ele('css:#code').clear().input(code)
+        dp.ele('css:#sureClick').click()
+    time.sleep(0.5)
+    dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
 ac.move_to('css:#fromStationText').click().type(change(fromCity))
@@ -136,23 +155,6 @@ dp.ele('css:#train_date').input(train_date)
 dp.ele('css:#query_ticket').click()
 # 点击预定按钮
 dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
-"""判断是否有登录账号"""
-text = dp.ele('css:#login_user').text
-if text == '登录':
-    # 输入账号密码登录
-    dp.ele('css:#J-userName').input(username)
-    dp.ele('css:#J-password').input(password)
-    dp.ele('css:#J-login').click()
-    dp.ele('css:#id_card').input(id_card)
-    dp.ele('css:#verification_code').click()
-    code = input('请输入手机收到的验证码：')
-    dp.ele('css:#code').input(code)
-    dp.ele('css:#sureClick').click()
-    while dp.ele('xpath://*[@id="message"]/p').text == '验证码校验失败!':
-        code = input('验证码输入错误！请重新输入验证码：')
-        dp.ele('css:#code').clear().input(code)
-        dp.ele('css:#sureClick').click()
-    time.sleep(0.5)
 # 选择乘车人
 dp.ele('css:#normalPassenger_0').click()
 if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
@@ -165,4 +167,3 @@ if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
 dp.ele('css:#submitOrder_id').click()
 time.sleep(0.5)
 dp.ele('css:#qr_submit_id').click()
-
