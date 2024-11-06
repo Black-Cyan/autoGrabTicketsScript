@@ -168,17 +168,17 @@ while True:
             start = time.time()
         time.sleep(1)
         continue
-
-    # 点击预定按钮
-    dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
-    # 选择乘车人
-    dp.ele('css:#normalPassenger_0').click()
-    if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
-        if config['isStu'] == 'y':
-            dp.ele('css:#dialog_xsertcj_ok').click()
-        else:
-            dp.ele('css:#dialog_xsertcj_cancel').click()
-    # 提交订单
-    dp.ele('css:#submitOrder_id').click()
-    dp.ele('css:#qr_submit_id').click()
-    break
+    else:
+        # 点击预定按钮
+        dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
+        # 选择乘车人
+        dp.ele('css:#normalPassenger_0').click()
+        if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
+            if config['isStu'] == 'y':
+                dp.ele('css:#dialog_xsertcj_ok').click()
+            else:
+                dp.ele('css:#dialog_xsertcj_cancel').click()
+        # 提交订单
+        dp.ele('css:#submitOrder_id').click()
+        dp.ele('css:#qr_submit_id').click()
+        break
