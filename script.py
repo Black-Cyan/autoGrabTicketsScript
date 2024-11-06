@@ -152,15 +152,19 @@ dp.ele('css:#toStationText').input(Keys.ENTER)
 dp.ele('css:#train_date').clear()
 dp.ele('css:#train_date').input(train_date)
 
+print('正在抢票中...')
+# 点击查询按钮
+dp.ele('css:#query_ticket').click()
+
 # 创建计时器
 start = time.time()
 while True:
-    # 点击查询按钮
-    dp.ele('css:#query_ticket').click()
     if not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72'):
-        print(f'车票还未开售，等待开售...(等待{config['heart']}秒自动刷新，请物关闭脚本)')
         if start - time.time() >= config['heart']:
             dp.refresh()
+            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
+            # 点击查询按钮
+            dp.ele('css:#query_ticket').click()
             start = time.time()
         time.sleep(1)
         continue
@@ -170,13 +174,11 @@ while True:
     # 选择乘车人
     dp.ele('css:#normalPassenger_0').click()
     if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
-        stu = input('检测到乘客为学生，是否购买学生票？（y/n）:')
-        if stu == 'y':
+        if config['isStu'] == 'y':
             dp.ele('css:#dialog_xsertcj_ok').click()
         else:
             dp.ele('css:#dialog_xsertcj_cancel').click()
     # 提交订单
     dp.ele('css:#submitOrder_id').click()
-    time.sleep(0.5)
     dp.ele('css:#qr_submit_id').click()
     break
