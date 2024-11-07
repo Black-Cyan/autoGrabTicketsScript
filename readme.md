@@ -13,7 +13,7 @@
     ```
   - yaml 
     ```
-    pip install yaml
+    pip install pyyaml
     ```
   - requests 
     ```
