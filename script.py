@@ -127,18 +127,21 @@ if text == '登录':
     dp.ele('css:#login_user').click()
     dp.ele('css:#J-userName').input(username)
     dp.ele('css:#J-password').input(password)
+    time.sleep(0.5)
     dp.ele('css:#J-login').click()
     dp.ele('css:#id_card').input(id_card)
+    time.sleep(0.5)
     dp.ele('css:#verification_code').click()
     code = input('请输入手机收到的验证码：')
     dp.ele('css:#code').input(code)
+    time.sleep(0.5)
     dp.ele('css:#sureClick').click()
-    while dp.ele('xpath://*[@id="message"]/p').text == '验证码校验失败!' or '很抱歉，您输入的短信验证码有误。':
+    time.sleep(0.5)
+    while dp.ele('xpath://*[@id="message"]/p'):
         code = input('验证码输入错误！请重新输入验证码：')
         dp.ele('css:#code').clear().input(code)
         dp.ele('css:#sureClick').click()
-    time.sleep(0.5)
-    dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
+dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
 ac.move_to('css:#fromStationText').click().type(change(fromCity))
@@ -159,18 +162,23 @@ dp.ele('css:#query_ticket').click()
 # 创建计时器
 start = time.time()
 while True:
-    if not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72'):
-        if start - time.time() >= config['heart']:
+    if (not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72')) and (second_class == '*' or hard_seat == '*'):
+        if time.time() - start >= config['heart']:
             dp.refresh()
             print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
+            time.sleep(0.8)
             # 点击查询按钮
             dp.ele('css:#query_ticket').click()
             start = time.time()
-        time.sleep(1)
+        elif time.strftime('%H:%M', time.localtime()) == '17:30':
+            dp.refresh()
+            time.sleep(0.8)
+            dp.ele('css:#query_ticket').click()
         continue
     else:
         # 点击预定按钮
         dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
+        time.sleep(1)
         # 选择乘车人
         dp.ele('css:#normalPassenger_0').click()
         if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
@@ -178,6 +186,7 @@ while True:
                 dp.ele('css:#dialog_xsertcj_ok').click()
             else:
                 dp.ele('css:#dialog_xsertcj_cancel').click()
+        time.sleep(1)
         # 提交订单
         dp.ele('css:#submitOrder_id').click()
         dp.ele('css:#qr_submit_id').click()
