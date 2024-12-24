@@ -1,7 +1,7 @@
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Keys
 
-needDown = ['longhui','beijingxi']
+needDown = ['longhui','beijingxi','xian']
 dp = ChromiumPage(9333)
 
 def need_revise(city):

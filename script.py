@@ -33,7 +33,7 @@ fromCity = input('请输入出发城市：')
 toCity = input('请输入到达城市：')
 
 # 请求网址
-url = f'https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={city_data[fromCity]}&leftTicketDTO.to_station={city_data[toCity]}&purpose_codes=ADULT'
+url = f'https://kyfw.12306.cn/otn/leftTicket/queryO?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={city_data[fromCity]}&leftTicketDTO.to_station={city_data[toCity]}&purpose_codes=ADULT'
 # 发送请求
 response = requests.get(headers = headers, url = url)
 
