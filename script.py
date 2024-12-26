@@ -171,7 +171,7 @@ while True:
             # 点击查询按钮
             dp.ele('css:#query_ticket').click()
             start = time.time()
-        elif time.strftime('%H:%M', time.localtime()) == '17:30' or '17:00':
+        elif time.strftime('%H:%M', time.localtime()) == '17:30' or time.strftime('%H:%M', time.localtime()) == '17:00':
             dp.refresh()
             time.sleep(0.8)
             dp.ele('css:#query_ticket').click()
