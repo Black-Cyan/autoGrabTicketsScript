@@ -31,6 +31,10 @@
     ```
     pip install pypinyin
     ```
+  - keyboard
+    ```
+    pip install keyboard
+    ```
 ### 使用方法：
 - 克隆本仓库  
   ```git
