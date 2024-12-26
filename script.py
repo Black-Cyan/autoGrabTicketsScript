@@ -3,6 +3,7 @@ import json
 import yaml
 import requests
 import revise
+import msvcrt
 from prettytable import PrettyTable
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Actions
@@ -155,7 +156,7 @@ dp.ele('css:#toStationText').input(Keys.ENTER)
 dp.ele('css:#train_date').clear()
 dp.ele('css:#train_date').input(train_date)
 
-print('正在抢票中...')
+print('正在抢票中...(按R手动刷新)')
 # 点击查询按钮
 dp.ele('css:#query_ticket').click()
 
@@ -165,12 +166,16 @@ while True:
     if (not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72')) and (second_class == '*' or hard_seat == '*'):
         if time.time() - start >= config['heart']:
             dp.refresh()
-            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
+            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新或按R手动刷新，请勿关闭脚本)')
             time.sleep(0.8)
             # 点击查询按钮
             dp.ele('css:#query_ticket').click()
             start = time.time()
-        elif time.strftime('%H:%M', time.localtime()) == '17:30':
+        elif time.strftime('%H:%M', time.localtime()) == '17:30' or '17:00':
+            dp.refresh()
+            time.sleep(0.8)
+            dp.ele('css:#query_ticket').click()
+        elif msvcrt.getch() == 'r':
             dp.refresh()
             time.sleep(0.8)
             dp.ele('css:#query_ticket').click()
