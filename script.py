@@ -4,6 +4,8 @@ import yaml
 import requests
 import revise
 import keyboard
+import DrissionPage.errors as dp_err
+from requests import JSONDecodeError
 from prettytable import PrettyTable
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Actions
@@ -19,9 +21,9 @@ def change(chinese):
     return string
 
 # 引用配置文件
-with open('config.yml', 'r', encoding='utf-8') as file:
+with open('config/config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
-f = open('cities.json', encoding='utf-8').read()
+f = open('config/cities.json', encoding='utf-8').read()
 city_data = json.loads(f)
 
 headers = {
@@ -33,13 +35,20 @@ train_date = input('请输入出发日期（YYYY-MM-DD）：')
 fromCity = input('请输入出发城市：')
 toCity = input('请输入到达城市：')
 
-# 请求网址
-url = f'https://kyfw.12306.cn/otn/leftTicket/queryO?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={city_data[fromCity]}&leftTicketDTO.to_station={city_data[toCity]}&purpose_codes=ADULT'
-# 发送请求
-response = requests.get(headers = headers, url = url)
-
-# 获取响应的json数据
-json_data = response.json()
+iterable = []
+iterable.extend(range(65, 91))
+for c in iterable:
+    # 请求网址
+    url = f'https://kyfw.12306.cn/otn/leftTicket/query{chr(c)}?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={city_data[fromCity]}&leftTicketDTO.to_station={city_data[toCity]}&purpose_codes=ADULT'
+    # 发送请求
+    response = requests.get(headers = headers, url = url)
+    try:
+        # 获取响应的json数据
+        json_data = response.json()
+    except JSONDecodeError:
+        continue
+    else:
+        break
 # 解析数据
 result = json_data['data']['result']
 
@@ -166,19 +175,27 @@ while True:
     if (not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72')) and (second_class == '*' or hard_seat == '*'):
         if keyboard.is_pressed('r'):
             dp.refresh()
-            time.sleep(0.8)
-            dp.ele('css:#query_ticket').click()
-            start = time.time()
+            # 执行两步操作，增加容错
+            try:
+                dp.ele('css:#query_ticket').click()
+            except dp_err.ElementLostError:
+                dp.ele('css:#query_ticket').click()
         elif time.strftime('%H:%M', time.localtime()) == '17:30' or time.strftime('%H:%M', time.localtime()) == '17:00':
             dp.refresh()
-            time.sleep(0.8)
-            dp.ele('css:#query_ticket').click()
+            # 执行两步操作，增加容错
+            try:
+                dp.ele('css:#query_ticket').click()
+            except dp_err.ElementLostError:
+                dp.ele('css:#query_ticket').click()
         elif time.time() - start >= config['heart']:
             dp.refresh()
             print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新或按R手动刷新，请勿关闭脚本)')
-            time.sleep(0.8)
-            # 点击查询按钮
-            dp.ele('css:#query_ticket').click()
+            # 执行两步操作，增加容错
+            try:
+                dp.ele('css:#query_ticket').click()
+            except dp_err.ElementLostError:
+                dp.ele('css:#query_ticket').click()
+            start = time.time()
         continue
     else:
         # 点击预定按钮

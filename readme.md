@@ -5,46 +5,16 @@
 ### 免责声明
 > 该脚本仅用于交流学习，禁止用于非法用途，请在下载的24h后删除该脚本！
 ### 准备工作：
-- Python3环境
-- 软件包
-  - json 
-    ```
-    pip install json
-    ```
-  - yaml 
-    ```
-    pip install pyyaml
-    ```
-  - requests 
-    ```
-    pip install requests
-    ```
-  - PrettyTable
-    ```
-    pip install prettytable
-    ```
-  - DrissionPage
-    ```
-    pip install drissionpage
-    ```
-  - pypinyin
-    ```
-    pip install pypinyin
-    ```
-  - keyboard
-    ```
-    pip install keyboard
-    ```
+- Python3环境  
 ### 使用方法：
 - 克隆本仓库  
   ```git
   git clone https://github.com/BlackCyan07/autoGrabTicketsScript
   ```
-- 打开配置文件*config.yml*进行配置，详细配置说明请参考*config.yml*文件。
-- 在终端中运行*script.py*  
-  ```
-  python script.py
-  ```
+- (建议，不会可跳过) 创建虚拟环境
+- 运行*install.bat*，安装软件包
+- 打开配置文件*config/config.yml*进行配置，详细配置说明请参考*config.yml*文件。
+- 运行*run.bat*  
   脚本会根据配置文件中的设置自动登录铁路12306，进行抢票操作   
 ---
 若您有任何疑问或建议，欢迎提交issue。  
