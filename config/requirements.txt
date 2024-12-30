@@ -1,5 +1,4 @@
 DrissionPage==4.1.0.9
-keyboard==0.13.5
 requests==2.32.3
 PyYAML==6.0.2
 pypinyin==0.53.0

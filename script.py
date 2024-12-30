@@ -1,24 +1,38 @@
-import time
 import json
-import yaml
-import requests
-import revise
-import keyboard
+import threading
+import time
+from queue import Queue
+
 import DrissionPage.errors as dp_err
-from requests import JSONDecodeError
-from prettytable import PrettyTable
+import requests
+import yaml
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Actions
 from DrissionPage.common import Keys
+from prettytable import PrettyTable
 from pypinyin import pinyin, Style
+from requests import JSONDecodeError
+
+import revise
 
 print('--------脚本作者：墨青--------')
 print('Github仓库：https://github.com/BlackCyan07/autoGrabTicketsScript')
 
+# 将输入的城市转换为拼音
 def change(chinese):
     text1 = pinyin(chinese, style=Style.NORMAL)
     string = ''.join([t[0] for t in text1])
     return string
+
+# 定义多线程目标函数
+def fetch_data(c, train_date, from_city, to_city, headers, result_queue):
+    url = f'https://kyfw.12306.cn/otn/leftTicket/query{chr(c) if c != 0 else ""}?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={from_city}&leftTicketDTO.to_station={to_city}&purpose_codes=ADULT'
+    response = requests.get(headers=headers, url=url)
+    try:
+        data = response.json()
+        result_queue.put(data)
+    except JSONDecodeError:
+        pass
 
 # 引用配置文件
 with open('config/config.yml', 'r', encoding='utf-8') as file:
@@ -35,20 +49,25 @@ train_date = input('请输入出发日期（YYYY-MM-DD）：')
 fromCity = input('请输入出发城市：')
 toCity = input('请输入到达城市：')
 
-iterable = []
+result_queue = Queue()
+threads = []
+iterable = [0]
 iterable.extend(range(65, 91))
+
+# 创建多线程
 for c in iterable:
-    # 请求网址
-    url = f'https://kyfw.12306.cn/otn/leftTicket/query{chr(c)}?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={city_data[fromCity]}&leftTicketDTO.to_station={city_data[toCity]}&purpose_codes=ADULT'
-    # 发送请求
-    response = requests.get(headers = headers, url = url)
-    try:
-        # 获取响应的json数据
-        json_data = response.json()
-    except JSONDecodeError:
-        continue
-    else:
+    thread = threading.Thread(target=fetch_data, args=(c, train_date, city_data[fromCity], city_data[toCity], headers, result_queue))
+    threads.append(thread)
+    thread.start()
+for thread in threads:
+    thread.join()
+json_data = None
+while not result_queue.empty():
+    result = result_queue.get()
+    if result:
+        json_data = result
         break
+
 # 解析数据
 result = json_data['data']['result']
 
@@ -62,7 +81,7 @@ tb.field_names = [
     '耗时',
     '二等座',
     '一等座',
-    '商务座',
+    '特等座',
     '无座',
     '硬座',
     '硬卧',
@@ -81,7 +100,7 @@ for i in result:
     use_time = index[10] # 耗时
     second_class = index[30] # 二等座
     first_class = index[31] # 一等座
-    topGrade = index[32] # 商务座
+    topGrade = index[32] # 特等座
     hard_sleeper = index[28] # 硬卧
     hard_seat = index[29] # 硬座
     no_seat = index[26] # 无座
@@ -93,7 +112,7 @@ for i in result:
         '耗时' : use_time,
         '二等座' : second_class,
         '一等座' : first_class,
-        '商务座' : topGrade,
+        '特等座' : topGrade,
         '无座' : no_seat,
         '硬座' : hard_seat,
         '硬卧' : hard_sleeper,
@@ -165,7 +184,7 @@ dp.ele('css:#toStationText').input(Keys.ENTER)
 dp.ele('css:#train_date').clear()
 dp.ele('css:#train_date').input(train_date)
 
-print('正在抢票中...(按R手动刷新)')
+print('正在抢票中...')
 # 点击查询按钮
 dp.ele('css:#query_ticket').click()
 
@@ -173,14 +192,7 @@ dp.ele('css:#query_ticket').click()
 start = time.time()
 while True:
     if (not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72')) and (second_class == '*' or hard_seat == '*'):
-        if keyboard.is_pressed('r'):
-            dp.refresh()
-            # 执行两步操作，增加容错
-            try:
-                dp.ele('css:#query_ticket').click()
-            except dp_err.ElementLostError:
-                dp.ele('css:#query_ticket').click()
-        elif time.strftime('%H:%M', time.localtime()) == '17:30' or time.strftime('%H:%M', time.localtime()) == '17:00':
+        if time.strftime('%H:%M:%S', time.localtime()) == '17:29:59' or time.strftime('%H:%M:%S', time.localtime()) == '16:59:59':
             dp.refresh()
             # 执行两步操作，增加容错
             try:
@@ -189,7 +201,7 @@ while True:
                 dp.ele('css:#query_ticket').click()
         elif time.time() - start >= config['heart']:
             dp.refresh()
-            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新或按R手动刷新，请勿关闭脚本)')
+            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
             # 执行两步操作，增加容错
             try:
                 dp.ele('css:#query_ticket').click()
