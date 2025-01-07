@@ -8,12 +8,9 @@ import requests
 import yaml
 from DrissionPage import ChromiumPage
 from DrissionPage.common import Actions
-from DrissionPage.common import Keys
 from prettytable import PrettyTable
 from pypinyin import pinyin, Style
 from requests import JSONDecodeError
-
-import revise
 
 print('--------脚本作者：墨青--------')
 print('Github仓库：https://github.com/BlackCyan07/autoGrabTicketsScript')
@@ -34,12 +31,30 @@ def fetch_data(c, train_date, from_city, to_city, headers, result_queue):
     except JSONDecodeError:
         pass
 
+# 选择目标城市
+def choose_city(city_items_selector,target_city_name):
+    city_items = []
+    # 获取下拉列表的所有元素
+    for cis in city_items_selector:
+        cities = dp.eles(cis)
+        city_items.extend(cities)
+
+    # 遍历每个下拉列表元素，寻找匹配的城市
+    for city_item in city_items:
+        city = city_item.ele('css:.ralign').text.strip()
+        if city == target_city_name:
+            city_item.click()
+            break
+
+
+
 # 引用配置文件
 with open('config/config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
 f = open('config/cities.json', encoding='utf-8').read()
 city_data = json.loads(f)
 
+# 定义请求头
 headers = {
     'Cookie' : '_uab_collina=171959196059070525462211; JSESSIONID=934CC95F7C881851D560D6EF8B7B67B5; tk=OYBnZPnapPHALsWNqLyIlFgK3ADcfICc3mdXI8QJZ-slmB1B0; _jc_save_wfdc_flag=dc; guidesStatus=off; highContrastMode=defaltMode; cursorStatus=off; _jc_save_toDate=2024-10-10; route=6f50b51faa11b987e576cdb301e545c4; BIGipServerotn=1943601418.64545.0000; _jc_save_fromStation=%u5A04%u5E95%u5357%2CUOQ; _jc_save_toStation=%u9686%u56DE%2CLHA; BIGipServerpassport=954728714.50215.0000; _jc_save_fromDate=2024-10-11; uKey=3a678c0f4997b5f9ce2423e0bc56c25fdf1b511105ed9aa129a89ddddb3f230d',
     'User-Agent' :  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0'
@@ -173,16 +188,21 @@ if text == '登录':
 dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
 # 定位输入框
 # 出发站
-ac.move_to('css:#fromStationText').click().type(change(fromCity))
-revise.need_revise(change(fromCity))
-dp.ele('css:#fromStationText').input(Keys.ENTER)
+input_selector = 'css:#fromStationText'
+ac.move_to(input_selector).click()
+time.sleep(0.3)
+ac.type(change(fromCity))
+time.sleep(0.3)
+city_items_selector = ['css:#panel_cities .citylineover','css:#panel_cities .cityline']
+choose_city(city_items_selector,fromCity)
 # 终点站
-ac.move_to('css:#toStationText').click().type(change(toCity))
-revise.need_revise(change(toCity))
-dp.ele('css:#toStationText').input(Keys.ENTER)
-# 出发时间
-dp.ele('css:#train_date').clear()
-dp.ele('css:#train_date').input(train_date)
+input_selector = 'css:#toStationText'
+ac.move_to(input_selector).click()
+time.sleep(0.3)
+ac.type(change(toCity))
+time.sleep(0.3)
+city_items_selector = ['css:#panel_cities .citylineover','css:#panel_cities .cityline']
+choose_city(city_items_selector,toCity)
 
 print('正在抢票中...')
 # 点击查询按钮
