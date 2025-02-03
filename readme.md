@@ -5,7 +5,8 @@
 ### 免责声明
 > 该脚本仅用于交流学习，禁止用于非法用途，请在下载的24h后删除该脚本！
 ### 准备工作：
-- Python3环境  
+- Python3环境 
+- Chrome内核浏览器(Microsoft Edge, Google Chrome)
 ### 使用方法：
 - 克隆本仓库  
   ```git
@@ -13,6 +14,13 @@
   ```
 - (建议，不会可跳过) 创建虚拟环境
 - 运行*install.bat*，安装软件包
+- (Edge用户)新建一个临时 py 文件，并输入以下代码，填入您电脑里的 Chrome 浏览器可执行文件路径，然后运行
+- ```python
+  from DrissionPage import ChromiumOptions
+
+  path = r'D:\Edge\msedge.exe'  # 请改为你电脑内Edge可执行文件路径，可在edge导航栏输入edge://version查询
+  ChromiumOptions().set_browser_path(path).save()
+  ```
 - 打开配置文件*config/config.yml*进行配置，详细配置说明请参考*config.yml*文件。
 - 运行*run.bat*  
   脚本会根据配置文件中的设置自动登录铁路12306，进行抢票操作   

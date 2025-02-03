@@ -203,6 +203,11 @@ ac.type(change(toCity))
 time.sleep(0.3)
 city_items_selector = ['css:#panel_cities .citylineover','css:#panel_cities .cityline']
 choose_city(city_items_selector,toCity)
+# 日期
+input_selector = 'css:#train_date'
+ac.move_to(input_selector).click()
+time.sleep(0.3)
+ac.type(train_date)
 
 print('正在抢票中...')
 # 点击查询按钮
