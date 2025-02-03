@@ -5,7 +5,7 @@
 ### 免责声明
 > 该脚本仅用于交流学习，禁止用于非法用途，请在下载的24h后删除该脚本！
 ### 准备工作：
-- Python3环境 
+- Python3.6 以上
 - Chrome内核浏览器(Microsoft Edge, Google Chrome)
 ### 使用方法：
 - 克隆本仓库  
