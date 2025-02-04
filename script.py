@@ -7,7 +7,7 @@ import DrissionPage.errors as dp_err
 import requests
 import yaml
 from DrissionPage import ChromiumPage
-from DrissionPage.common import Actions
+from DrissionPage.common import Actions, Keys
 from prettytable import PrettyTable
 from pypinyin import pinyin, Style
 from requests import JSONDecodeError
@@ -207,6 +207,9 @@ choose_city(city_items_selector,toCity)
 input_selector = 'css:#train_date'
 ac.move_to(input_selector).click()
 time.sleep(0.3)
+ac.key_down(Keys.CTRL)
+ac.type('a')
+ac.key_up(Keys.CTRL)
 ac.type(train_date)
 
 print('正在抢票中...')
