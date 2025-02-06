@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 import time
 from queue import Queue
@@ -22,14 +23,23 @@ def change(chinese):
     return string
 
 # 定义多线程目标函数
-def fetch_data(c, train_date, from_city, to_city, headers, result_queue):
-    url = f'https://kyfw.12306.cn/otn/leftTicket/query{chr(c) if c != 0 else ""}?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={from_city}&leftTicketDTO.to_station={to_city}&purpose_codes=ADULT'
-    response = requests.get(headers=headers, url=url)
-    try:
-        data = response.json()
-        result_queue.put(data)
-    except JSONDecodeError:
-        pass
+def fetch_data(a, c, train_date, from_city, to_city, headers, result_queue):
+    url = [f'https://kyfw.12306.cn/otn/leftTicket/query{chr(c) if c != 0 else ""}?leftTicketDTO.train_date={train_date}&leftTicketDTO.from_station={from_city}&leftTicketDTO.to_station={to_city}&purpose_codes=ADULT',
+           f'https://kyfw.12306.cn/lcquery/query{chr(c) if c != 0 else ""}?train_date={train_date}&from_station_telecode={from_city}&to_station_telecode={to_city}&middle_station=&result_index=0&can_query=Y&isShowWZ=N&purpose_codes=00&channel=E']
+    response = requests.get(headers=headers, url=url[a])
+    if a == 0:
+        try:
+            data = response.json()
+            result_queue.put(data)
+        except JSONDecodeError:
+            pass
+    else:
+        try:
+            data = response.json()
+            temp = data['data']['middleList']
+            result_queue.put(data)
+        except KeyError:
+            pass
 
 # 选择目标城市
 def choose_city(city_items_selector,target_city_name):
@@ -45,8 +55,6 @@ def choose_city(city_items_selector,target_city_name):
         if city == target_city_name:
             city_item.click()
             break
-
-
 
 # 引用配置文件
 with open('config/config.yml', 'r', encoding='utf-8') as file:
@@ -68,27 +76,33 @@ result_queue = Queue()
 threads = []
 iterable = [0]
 iterable.extend(range(65, 91))
+i = [0, 1]
 
 # 创建多线程
-for c in iterable:
-    thread = threading.Thread(target=fetch_data, args=(c, train_date, city_data[fromCity], city_data[toCity], headers, result_queue))
-    threads.append(thread)
-    thread.start()
-for thread in threads:
-    thread.join()
-json_data = None
-while not result_queue.empty():
-    result = result_queue.get()
-    if result:
-        json_data = result
-        break
+json_datas = []
+for a in i:
+    for c in iterable:
+        thread = threading.Thread(target=fetch_data, args=(a, c, train_date, city_data[fromCity], city_data[toCity], headers, result_queue))
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
+    json_data = None
+    while not result_queue.empty():
+        result = result_queue.get()
+        if result:
+            json_data = result
+            json_datas.append(json_data)
+            break
 
 # 解析数据
-result = json_data['data']['result']
+result1 = json_datas[0]['data']['result']
+result2 = json_datas[1]['data']['middleList']
 
 # 实例化对象
-tb = PrettyTable()
-tb.field_names = [
+tb1 = PrettyTable()
+tb2 = PrettyTable()
+tb1.field_names = [
     '序号',
     '车次',
     '出发时间',
@@ -102,13 +116,40 @@ tb.field_names = [
     '硬卧',
     '软卧'
 ]
+tb2.field_names = [
+    '序号',
+    '中转站',
+    '候车时间',
+    '出发时间',
+    '到达时间',
+    '耗时',
+    '1二等座',
+    '1一等座',
+    '1特等座',
+    '1无座',
+    '1硬座',
+    '1软座',
+    '1硬卧',
+    '1软卧',
+    '2二等座',
+    '2一等座',
+    '2特等座',
+    '2无座',
+    '2硬座',
+    '2软座',
+    '2硬卧',
+    '2软卧'
+]
 # 定义序号
 page = 1
+# 定义车次编号容器
+train_no = []
 # for循环遍历，提取列表元素内容
-for i in result:
+for i in result1:
     # 字符串分割，返回列表
     index = i.split('|')
     # 通过列表索引位置取值
+    train_no.append(index[2] + '_' + index[16] + '_' + index[17])
     num = index[3] # 车次
     start_time = index[8] # 出发时间
     end_time = index[9] # 到达时间
@@ -134,7 +175,7 @@ for i in result:
         '软卧' : soft_sleeper
     }
 
-    tb.add_row([
+    tb1.add_row([
         page,
         num,
         start_time,
@@ -149,8 +190,85 @@ for i in result:
         soft_sleeper,
     ])
     page += 1
-if result:
-    print(tb)
+x = 0
+for i in result2:
+    train_no.append(i['first_train_no'] + '_' + str(x))
+    middle_station = i['middle_station_name']
+    wait_time = i['wait_time']
+    start_time = i['start_time']
+    arrive_time = i['arrive_time']
+    all_lishi = i['all_lishi']
+    ze_num1 = i['fullList'][0]['ze_num']
+    zy_num1 = i['fullList'][0]['zy_num']
+    swz_num1 = i['fullList'][0]['swz_num']
+    wz_num1 = i['fullList'][0]['wz_num']
+    yz_num1 = i['fullList'][0]['yz_num']
+    rz_num1 = i['fullList'][0]['rz_num']
+    yw_num1 = i['fullList'][0]['yw_num']
+    rw_num1 = i['fullList'][0]['rw_num']
+    ze_num2 = i['fullList'][1]['ze_num']
+    zy_num2 = i['fullList'][1]['zy_num']
+    swz_num2 = i['fullList'][1]['swz_num']
+    wz_num2 = i['fullList'][1]['wz_num']
+    yz_num2 = i['fullList'][1]['yz_num']
+    rz_num2 = i['fullList'][1]['rz_num']
+    yw_num2 = i['fullList'][1]['yw_num']
+    rw_num2 = i['fullList'][1]['rw_num']
+    dit = {
+        '中转站': middle_station,
+        '候车时间': wait_time,
+        '出发时间': start_time,
+        '到达时间': arrive_time,
+        '耗时': all_lishi,
+        '1二等座': ze_num1,
+        '1一等座': zy_num1,
+        '1特等座': swz_num1,
+        '1无座': wz_num1,
+        '1硬座': yz_num1,
+        '1软座': rz_num1,
+        '1硬卧': yw_num1,
+        '1软卧': rw_num1,
+        '2二等座': ze_num2,
+        '2一等座': zy_num2,
+        '2特等座': swz_num2,
+        '2无座': wz_num2,
+        '2硬座': yz_num2,
+        '2软座': rz_num2,
+        '2硬卧': yw_num2,
+        '2软卧': rw_num2
+    }
+    tb2.add_row([
+        page,
+        middle_station,
+        wait_time,
+        start_time,
+        arrive_time,
+        all_lishi,
+        ze_num1,
+        zy_num1,
+        swz_num1,
+        wz_num1,
+        yz_num1,
+        rz_num1,
+        yw_num1,
+        rw_num1,
+        ze_num2,
+        zy_num2,
+        swz_num2,
+        wz_num2,
+        yz_num2,
+        rz_num2,
+        yw_num2,
+        rw_num2
+    ])
+    page += 1
+    x += 1
+if result1:
+    print('直达')
+    print(tb1)
+    if result2:
+        print('中转')
+        print(tb2)
 else:
     print('暂无该方案车次，程序自动退出')
     exit()
@@ -158,7 +276,7 @@ else:
 username = config['username']
 password = config['password']
 id_card = config['id_card']
-Num = input('请选择你想购买的车次序号：')
+Num = int(input('请选择你想购买的车次序号：'))
 
 # 打开浏览器
 dp = ChromiumPage(9333)
@@ -185,7 +303,9 @@ if text == '登录':
         code = input('验证码输入错误！请重新输入验证码：')
         dp.ele('css:#code').clear().input(code)
         dp.ele('css:#sureClick').click()
-dp.get('https://kyfw.12306.cn/otn/leftTicket/init')
+
+flag = Num <= len(result1)
+dp.get('https://kyfw.12306.cn/otn/leftTicket/init' if flag else 'https://kyfw.12306.cn/otn/lcQuery/init')
 # 定位输入框
 # 出发站
 input_selector = 'css:#fromStationText'
@@ -204,7 +324,7 @@ time.sleep(0.3)
 city_items_selector = ['css:#panel_cities .citylineover','css:#panel_cities .cityline']
 choose_city(city_items_selector,toCity)
 # 日期
-input_selector = 'css:#train_date'
+input_selector = 'css:#train_date' if flag else 'css:#train_start_date'
 ac.move_to(input_selector).click()
 time.sleep(0.3)
 ac.key_down(Keys.CTRL)
@@ -214,42 +334,52 @@ ac.type(train_date)
 
 print('正在抢票中...')
 # 点击查询按钮
-dp.ele('css:#query_ticket').click()
+dp.ele('css:#query_ticket' if flag else 'css:#_a_search_btn').click()
 
-# 创建计时器
-start = time.time()
-while True:
-    if (not dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72')) and (second_class == '*' or hard_seat == '*'):
-        if time.strftime('%H:%M:%S', time.localtime()) == '17:29:59' or time.strftime('%H:%M:%S', time.localtime()) == '16:59:59':
-            dp.refresh()
-            # 执行两步操作，增加容错
-            try:
-                dp.ele('css:#query_ticket').click()
-            except dp_err.ElementLostError:
-                dp.ele('css:#query_ticket').click()
-        elif time.time() - start >= config['heart']:
-            dp.refresh()
-            print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
-            # 执行两步操作，增加容错
-            try:
-                dp.ele('css:#query_ticket').click()
-            except dp_err.ElementLostError:
-                dp.ele('css:#query_ticket').click()
-            start = time.time()
-        continue
-    else:
-        # 点击预定按钮
-        dp.ele(f'css:#queryLeftTable tr:nth-child({int(Num)*2-1}) .btn72').click()
-        time.sleep(1)
-        # 选择乘车人
-        dp.ele('css:#normalPassenger_0').click()
-        if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
-            if config['isStu'] == 'y':
-                dp.ele('css:#dialog_xsertcj_ok').click()
-            else:
-                dp.ele('css:#dialog_xsertcj_cancel').click()
-        time.sleep(1)
-        # 提交订单
-        dp.ele('css:#submitOrder_id').click()
-        dp.ele('css:#qr_submit_id').click()
-        break
+if flag:
+    # 创建计时器
+    start = time.time()
+    while True:
+        if (not dp.ele(f'xpath://*[@id="ticket_{train_no[Num - 1]}"]/td[13]/a')) and (second_class == '*' or hard_seat == '*'):
+            if time.strftime('%H:%M:%S', time.localtime()) == '17:29:59' or time.strftime('%H:%M:%S', time.localtime()) == '16:59:59':
+                dp.refresh()
+                time.sleep(0.3)
+                # 执行两步操作，增加容错
+                try:
+                    dp.ele('css:#query_ticket').click()
+                except dp_err.ElementLostError:
+                    time.sleep(0.1)
+                    dp.ele('css:#query_ticket').click()
+            elif time.time() - start >= config['heart']:
+                dp.refresh()
+                print(f'车票还未开售，等待开售...(等待{config["heart"]}秒自动刷新，请勿关闭脚本)')
+                time.sleep(0.3)
+                # 执行两步操作，增加容错
+                try:
+                    dp.ele('css:#query_ticket').click()
+                except dp_err.ElementLostError:
+                    time.sleep(0.1)
+                    dp.ele('css:#query_ticket').click()
+                start = time.time()
+            continue
+        else:
+            # 点击预定按钮
+            dp.ele(f'xpath://*[@id="ticket_{train_no[Num - 1]}"]/td[13]/a').click()
+            time.sleep(1)
+            # 选择乘车人
+            for i in config['passenger']:
+                dp.ele(f'css:#normalPassenger_{i - 1}').click()
+                if dp.ele('xpath://*[@id="dialog_xsertcj"]/div[2]'):
+                    if config['isStu'] == 'y':
+                        dp.ele('css:#dialog_xsertcj_ok').click()
+                    else:
+                        dp.ele('css:#dialog_xsertcj_cancel').click()
+            time.sleep(0.3)
+            # 提交订单
+            dp.ele('css:#submitOrder_id').click()
+            time.sleep(0.3)
+            dp.ele('css:#qr_submit_id').click()
+            break
+else:
+    dp.ele(f'xpath://*[@id="ticket_{train_no[Num - 1]}"]/td[12]/a').click()
+    dp.ele('css:#dialog_lc_ok').click()
