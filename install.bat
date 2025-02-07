@@ -1,4 +1,4 @@
 @echo off
 cd .\config
-python .\install_dependencies.py
+pip install -r requirements.txt
 pause

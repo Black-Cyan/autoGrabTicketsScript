@@ -3,3 +3,4 @@ requests==2.32.3
 PyYAML==6.0.2
 pypinyin==0.53.0
 prettytable==3.12.0
+jsonschema==4.23.0
