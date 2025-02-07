@@ -1,3 +1,8 @@
+# @program      autoGrabTicketsScript
+# @copyright    Copyright (C) 2024-2025 BlackCyan (github.com/Black-Cyan)
+# @license      GPL3.0 (https://www.gnu.org/licenses/gpl-3.0.html)
+# @author       BlackCyan <blackcyan07@outlook.com>
+
 import json
 import threading
 import time
@@ -13,8 +18,8 @@ from prettytable import PrettyTable
 from pypinyin import pinyin, Style
 from requests import JSONDecodeError
 
-print('--------脚本作者：墨青--------')
-print('Github仓库：https://github.com/BlackCyan07/autoGrabTicketsScript')
+print('autoGrabTicketsScript Copyright (C) 2024-2025 BlackCyan')
+print('Github: https://github.com/Black-Cyan/autoGrabTicketsScript')
 
 # 将输入的城市转换为拼音
 def change(chinese):
